@@ -41,11 +41,6 @@
   :link '(url-link "https://git.sr.ht/~mgmarlow/deno-ts-mode")
   :group 'languages)
 
-(defcustom deno-ts-bin "deno"
-  "Path to deno executable."
-  :type 'string
-  :group 'deno)
-
 (defun deno-ts-project-p ()
   "Return t if `project-current' is a Deno project."
   (when-let* ((project (project-current))
@@ -57,28 +52,6 @@
   "Add `deno-ts-mode' to `eglot-server-programs'."
   (add-to-list 'eglot-server-programs
                '(deno-ts-mode . ("deno" "lsp" :initializationOptions (:enable t :lint t)))))
-
-;; TODO
-;; (defun deno--project-cmd (format-string)
-;;   (unless (deno-project-p)
-;;     (error "No Deno project found"))
-;;   (let ((default-main (concat (project-root (project-current)) "main.ts")))
-;;     (compile (apply #'format
-;;                     (concat "%s " format-string " %s")
-;;                     (list deno-bin default-main)))))
-
-;; (defun deno-compile ()
-;;   (interactive)
-;;   (deno--project-cmd "compile"))
-
-;; (defun deno-run ()
-;;   (interactive)
-;;   (deno--project-cmd "run"))
-
-;; This is executed in a directory, does not take a file param:
-;; (defun deno-test ()
-;;   (interactive)
-;;   (deno--project-cmd "test"))
 
 (define-derived-mode deno-ts-mode
   typescript-ts-mode "Deno"
