@@ -32,11 +32,11 @@
 
 ;;; Code:
 
-(require 'eieio)
 (require 'eglot)
 (require 'project)
+(require 'typescript-ts-mode) ; Make sure to load auto-mode-alist here first
 
-(defgroup deno-ts-mode nil
+(defgroup deno nil
   "Major mode for Deno."
   :link '(url-link "https://git.sr.ht/~mgmarlow/deno-ts-mode")
   :group 'languages)
@@ -46,30 +46,17 @@
   :type 'string
   :group 'deno)
 
-;; https://deno.land/manual@v1.36.1/getting_started/setup_your_environment#eglot
-(defclass deno-eglot (eglot-lsp-server) ()
-  :documentation "A custom class for deno lsp.")
-
-(cl-defmethod eglot-initialization-options ((server deno-eglot))
-  "Passes through required deno initialization options"
-  (list :enable t
-        :lint t))
-
 (defun deno-project-p ()
-  "Predicate for determining if the open project is a Deno one."
+  "Return t if `project-current' is a Deno project."
   (when-let* ((project (project-current))
               (p-root (project-root project)))
     (file-exists-p (concat p-root "deno.json"))))
 
-(defun deno--eglot-server-program (&rest _)
-  "Decide which server to use based on project characteristics."
-  (cond ((deno-project-p) '(deno-eglot "deno" "lsp"))
-        (t '("typescript-language-server" "--stdio"))))
-
+;; https://deno.land/manual@v1.36.1/getting_started/setup_your_environment#eglot
 (defun deno-setup-eglot ()
-  "Add symbol `deno-eglot' to Eglot's server programs."
+  "Add `deno-ts-mode' to `eglot-server-programs'."
   (add-to-list 'eglot-server-programs
-               '(deno-ts-mode . deno--eglot-server-program)))
+               '(deno-ts-mode . ("deno" "lsp" :initializationOptions (:enable t :lint t)))))
 
 ;; TODO
 ;; (defun deno--project-cmd (format-string)
@@ -94,18 +81,22 @@
 ;;   (deno--project-cmd "test"))
 
 (define-derived-mode deno-ts-mode
-  typescript-ts-mode "Deno-tree-sitter"
+  typescript-ts-mode "Deno"
   "Major mode for Deno."
   :group 'deno-ts-mode)
 
-(defun deno--alist-mode ()
-  (if (deno-project-p)
-      (deno-ts-mode)
-    (typescript-ts-mode)))
+(defun deno--auto-mode ()
+  "Return `deno-ts-mode' if project is a Deno project, else `typescript-ts-mode'."
+  (cond ((deno-project-p) (deno-ts-mode))
+        (t (typescript-ts-mode))))
 
 (defun deno-setup-auto-mode-alist ()
-  (add-to-list 'auto-mode-alist '("\\.ts\\'" . deno--alist-mode))
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . deno--alist-mode)))
+  "Add Deno to `auto-mode-alist' for .ts and .tsx files.
+
+If the visited .ts file does not detect a Deno project (as
+determined by `deno-project-p') this function will fallback to
+`typescript-ts-mode'."
+  (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . deno--auto-mode)))
 
 (provide 'deno-ts-mode)
 ;;; deno-ts-mode.el ends here
