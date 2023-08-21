@@ -58,10 +58,15 @@
   "Major mode for Deno."
   :group 'deno-ts-mode)
 
-(defun deno-ts--auto-mode ()
+(defun deno-ts--ts-auto-mode ()
   "Return `deno-ts-mode' if project is a Deno project, else `typescript-ts-mode'."
   (cond ((deno-ts-project-p) (deno-ts-mode))
         (t (typescript-ts-mode))))
+
+(defun deno-ts--tsx-auto-mode ()
+  "Return `deno-ts-mode' if project is a Deno project, else `tsx-ts-mode'."
+  (cond ((deno-ts-project-p) (deno-ts-mode))
+        (t (tsx-ts-mode))))
 
 (defun deno-ts-setup-auto-mode-alist ()
   "Add Deno to `auto-mode-alist' for .ts and .tsx files.
@@ -69,7 +74,8 @@
 If the visited .ts file does not detect a Deno project (as
 determined by `deno-project-p') this function will fallback to
 `typescript-ts-mode'."
-  (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . deno-ts--auto-mode)))
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . deno-ts--ts-auto-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . deno-ts--tsx-auto-mode)))
 
 (provide 'deno-ts-mode)
 ;;; deno-ts-mode.el ends here
