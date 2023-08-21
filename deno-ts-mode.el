@@ -1,4 +1,4 @@
-;;; deno-ts-mode.el --- Useful extensions when working with Deno  -*- lexical-binding: t; -*-
+;;; deno-ts-mode.el --- Major mode for Deno  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023  Graham Marlow
 
@@ -23,7 +23,12 @@
 
 ;;; Commentary:
 
-;; 
+;; Major mode for Deno.  `deno-ts-mode' is derived from
+;; `typescript-ts-mode', so it depends on the TypeScript tree-sitter
+;; parser and definitions.  Since Deno uses the same file extension as
+;; TypeScript, `deno-ts-mode' helps alleviate some of the common
+;; issues that come out of swapping between Deno projects and regular
+;; TS projects.
 
 ;;; Code:
 
