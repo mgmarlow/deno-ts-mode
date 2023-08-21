@@ -35,23 +35,50 @@
 (require 'eglot)
 (require 'project)
 (require 'typescript-ts-mode) ; Make sure to load auto-mode-alist here first
+(require 'json)
 
 (defgroup deno-ts nil
   "Major mode for Deno."
   :link '(url-link "https://git.sr.ht/~mgmarlow/deno-ts-mode")
   :group 'languages)
 
-(defun deno-ts-project-p ()
-  "Return t if `project-current' is a Deno project."
+(defcustom deno-ts-bin "deno"
+  "Path to deno executable."
+  :type 'string
+  :group 'deno)
+
+(defun deno-ts--project-config ()
+  "Return the filepath of the current project's deno config.
+
+Return nil if no project or config is found."
   (when-let* ((project (project-current))
               (p-root (project-root project)))
-    (file-exists-p (concat p-root "deno.json"))))
+    (concat p-root "deno.json")))
+
+(defun deno-ts-project-p ()
+  "Return t if `project-current' is a Deno project."
+  (when-let ((project-config (deno-ts--project-config)))
+    (file-exists-p project-config)))
 
 ;; https://deno.land/manual@v1.36.1/getting_started/setup_your_environment#eglot
 (defun deno-ts-setup-eglot ()
   "Add `deno-ts-mode' to `eglot-server-programs'."
   (add-to-list 'eglot-server-programs
                '(deno-ts-mode . ("deno" "lsp" :initializationOptions (:enable t :lint t)))))
+
+(defun deno-ts--project-tasks ()
+  "List tasks from the current project's deno config."
+  (let ((p-config (deno-ts--project-config)))
+    (unless p-config
+      (error "No project deno.json file found"))
+    (alist-get 'tasks (json-read-file p-config))))
+
+(defun deno-ts-run-task ()
+  "Execute a deno task from the current project's deno config."
+  (interactive)
+  (let ((tasks (mapcar 'car (deno-ts--project-tasks))))
+    (compile (format "deno task %s"
+                     (completing-read "Run task: " tasks nil t)))))
 
 (define-derived-mode deno-ts-mode
   typescript-ts-mode "Deno"
@@ -76,6 +103,9 @@ determined by `deno-project-p') this function will fallback to
 `typescript-ts-mode'."
   (add-to-list 'auto-mode-alist '("\\.ts\\'" . deno-ts--ts-auto-mode))
   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . deno-ts--tsx-auto-mode)))
+
+;; Required for Deno's color output.
+(add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 
 (provide 'deno-ts-mode)
 ;;; deno-ts-mode.el ends here

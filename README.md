@@ -2,6 +2,13 @@
 
 A major mode for Deno, based on `typescript-ts-mode`.
 
+## Features
+
+- Syntax highlighting (based on `typescript-ts-mode`)
+- Task automation
+- Eglot configuration
+- TypeScript file extension helpers for `auto-mode`
+
 ## Installation
 
 Requires Emacs 29+ with tree-sitter installed.
@@ -38,7 +45,19 @@ Project](https://www.gnu.org/software/emacs/manual/html_node/emacs/Projects.html
 speaking, projects are only detectable if they are under version
 control.
 
-## Eglot usage example
+## Task automation
+
+If your project contains a [deno configuration
+file](https://deno.land/manual@v1.36.2/getting_started/configuration_file)
+you can run tasks directly from Emacs.
+
+Run a task:
+
+```
+M-x deno-ts-run-task
+```
+
+## Eglot setup example
 
 ```elisp
 (use-package deno-ts-mode
