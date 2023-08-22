@@ -69,18 +69,24 @@
   :type 'string
   :group 'deno)
 
-(defun deno-ts--project-config ()
+(defun deno-ts--project-config-path ()
   "Return the filepath of the current project's deno config.
 
-Return nil if no project or config is found."
+Return nil if `project-current' is nil or if a deno config file
+cannot be found."
   (when-let* ((project (project-current))
-              (p-root (project-root project)))
-    (concat p-root "deno.json")))
+              (p-root (project-root project))
+              (possible-filepaths
+               (mapcar (lambda (filepath) (concat p-root filepath))
+                       '("deno.json" "deno.jsonc"))))
+    (seq-find 'file-exists-p possible-filepaths)))
 
 (defun deno-ts-project-p ()
-  "Return t if `project-current' is a Deno project."
-  (when-let ((project-config (deno-ts--project-config)))
-    (file-exists-p project-config)))
+  "Return t if `project-current' is a Deno project.
+
+Return nil if `project-current' is not a Deno project or the
+current project cannot be read."
+  (and (deno-ts--project-config-path) t))
 
 ;; https://deno.land/manual@v1.36.1/getting_started/setup_your_environment#eglot
 (defun deno-ts-setup-eglot ()
@@ -90,9 +96,9 @@ Return nil if no project or config is found."
 
 (defun deno-ts--project-tasks ()
   "List tasks from the current project's deno config."
-  (let ((p-config (deno-ts--project-config)))
+  (let ((p-config (deno-ts--project-config-path)))
     (unless p-config
-      (error "No project deno.json file found"))
+      (error "Cannot find Deno configuration file"))
     (alist-get 'tasks (json-read-file p-config))))
 
 (defun deno-ts-run-task ()
