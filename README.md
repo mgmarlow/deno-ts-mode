@@ -47,9 +47,17 @@ control.
 
 ## Task automation
 
-If your project contains a [deno configuration
+If your project's [deno configuration
 file](https://deno.land/manual@v1.36.2/getting_started/configuration_file)
-you can run tasks directly from Emacs.
+contains tasks you can run them directly from Emacs.
+
+```json
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  }
+}
+```
 
 Run a task:
 
