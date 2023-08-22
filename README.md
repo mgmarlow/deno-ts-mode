@@ -78,3 +78,12 @@ M-x deno-ts-run-task
   :config
   (deno-ts-setup-eglot))
 ```
+
+# Contributing
+
+Please direct bug reports or patches to the [mailing
+list](https://lists.sr.ht/~mgmarlow/public-inbox).
+
+# License
+
+Licensed under [GPL-3.0](./COPYING).
