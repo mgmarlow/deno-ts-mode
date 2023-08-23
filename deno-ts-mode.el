@@ -135,5 +135,9 @@ determined by `deno-project-p') this function will fallback to
 ;; Required for Deno's color output.
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 
+;;;###autoload
+(dolist (file '("deno.json" "deno.jsonc"))
+  (add-to-list 'project-vc-extra-root-markers file))
+
 (provide 'deno-ts-mode)
 ;;; deno-ts-mode.el ends here
