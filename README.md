@@ -1,5 +1,7 @@
 # deno-ts-mode
 
+[![MELPA](https://melpa.org/packages/deno-ts-mode-badge.svg)](https://melpa.org/#/deno-ts-mode)
+
 A major mode for Deno, based on `typescript-ts-mode`.
 
 ## Features
@@ -13,8 +15,11 @@ A major mode for Deno, based on `typescript-ts-mode`.
 
 Requires Emacs 29+ with tree-sitter installed.
 
+Available on [MELPA](https://melpa.org/#/deno-ts-mode):
+
 ```elisp
-(package-vc-install "https://git.sr.ht/~mgmarlow/deno-ts-mode")
+(use-package deno-ts-mode
+  :ensure t)
 ```
 
 ### Installing tree-sitter parsers
