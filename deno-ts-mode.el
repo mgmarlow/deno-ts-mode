@@ -58,6 +58,7 @@
 (require 'project)
 (require 'typescript-ts-mode) ; Make sure to load auto-mode-alist here first
 (require 'json)
+(require 'cl-lib)
 
 (defgroup deno-ts nil
   "Major mode for Deno."
@@ -94,19 +95,36 @@ current project cannot be read."
   (add-to-list 'eglot-server-programs
                '(deno-ts-mode . ("deno" "lsp" :initializationOptions (:enable t :lint t)))))
 
-(defun deno-ts--project-tasks ()
-  "List tasks from the current project's deno config."
-  (let ((p-config (deno-ts--project-config-path)))
-    (unless p-config
-      (error "Cannot find Deno configuration file"))
-    (alist-get 'tasks (json-read-file p-config))))
+(cl-defstruct deno-ts-config
+  "Deno configuration file struct."
+  tasks lint fmt test)
+
+(defun deno-ts--build-config (json)
+  "Return an instance of `deno-ts-config' from JSON string."
+  (let ((raw (json-read-from-string json)))
+    (make-deno-ts-config :tasks (alist-get 'tasks raw)
+                         :lint (alist-get 'lint raw)
+                         :fmt (alist-get 'fmt raw)
+                         :test (alist-get 'test raw))))
+
+(defun deno-ts-project-config ()
+  "Return an instance of `deno-ts-config' built from the current project.
+
+Return nil if no project is found."
+  (when-let ((p-config-path (deno-ts--project-config-path)))
+    (deno-ts--build-config
+     (with-temp-buffer
+       (insert-file-contents p-config-path)
+       (buffer-string)))))
 
 (defun deno-ts-run-task ()
   "Execute a deno task from the current project's deno config."
   (interactive)
-  (let ((tasks (mapcar 'car (deno-ts--project-tasks))))
-    (compile (format "deno task %s"
-                     (completing-read "Run task: " tasks nil t)))))
+  (if-let* ((config (deno-ts-project-config))
+            (tasks (mapcar 'car (deno-ts-config-tasks config))))
+      (compile (format "deno task %s"
+                       (completing-read "Run task: " tasks nil t)))
+    (error "Cannot find Deno configuration file")))
 
 (define-derived-mode deno-ts-mode
   typescript-ts-mode "Deno"
