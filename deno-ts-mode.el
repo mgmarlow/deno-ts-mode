@@ -5,7 +5,7 @@
 ;; Author: Graham Marlow <info@mgmarlow.com>
 ;; Keywords: languages
 ;; URL: https://git.sr.ht/~mgmarlow/deno-ts-mode
-;; Version: 0.1.1
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "29.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -30,15 +30,11 @@
 ;; and TypeScript parsers for full deno syntax support (see README for
 ;; full details).
 ;;
-;; This package helps solve some of the problems that arise from deno
-;; and TypeScript sharing the same file extension.  With
-;; `deno-ts-setup-auto-mode-alist', `deno-ts-mode' will check for the
-;; presence of a Deno config file when a major mode is selected for a
-;; ".ts" or ".tsx" file.  When the config file is located,
-;; `deno-ts-mode' is selected.  Otherwise, `typescript-ts-mode' and
-;; `tsx-ts-mode' are selected as fallbacks.  This function is
-;; optional, so you can determine your auto-mode bindings however you
-;; wish.
+;; This package helps solve some of the problems that arise from Deno
+;; and TypeScript sharing the same file extension.  If a Deno
+;; configuration file is found at project root, `deno-ts-mode' takes
+;; precedence over `typescript-ts-mode'.  Both ".ts" and ".tsx" file
+;; extensions are supported.
 ;;
 ;; Example configuration:
 ;; 
@@ -132,9 +128,10 @@ Return nil if no project is found."
 
 ;;;###autoload
 (defun deno-ts-mode-maybe ()
-  "Turn on `deno-ts-mode' if a Deno config file is found.
+  "Maybe activate `deno-ts-mode'.
 
-Otherwise, fallback to either `typescript-ts-mode' or
+If the current file belongs to a Deno project, `deno-ts-mode' is
+activated.  Otherwise, fallback to either `typescript-ts-mode' or
 `tsx-ts-mode' depending on the visited file extension."
   (if-let* ((filename (buffer-file-name))
             (ext (file-name-extension filename)))
@@ -147,16 +144,13 @@ Otherwise, fallback to either `typescript-ts-mode' or
             ((equal "tsx" ext)
              (tsx-ts-mode)))))
 
-;; `deno-ts-mode' is competing with `typescript-ts-mode' and
-;; `tsx-ts-mode' for precedence of the ".ts" and ".tsx" file
-;; extensions.  `deno-ts-mode' is derived from `typescript-ts-mode'
-;; and will load it implicitly.  This is a problem for
-;; `auto-mode-alist' because `typescript-ts-mode' adds itself to
-;; `auto-mode-alist', meaning that it will come first in the
-;; association list since it's loaded after the `deno-ts-mode'
-;; autoloads. To work around this, remove the `typescript-ts-mode' and
-;; `tsx-ts-mode' entries from `auto-mode-alist'. This library assumes
-;; that users want to check for Deno files in all cases.
+;; `deno-ts-mode' is competing with `typescript-ts-mode' for control
+;; over the ".ts" and ".tsx" file extensions.  Because `deno-ts-mode'
+;; derives `typescript-ts-mode', the `auto-mode-alist' entries from
+;; `typescript-ts-mode' are added after the ones from this library,
+;; shadowing them.  To work around this, this library manually removes
+;; the `typescript-ts-mode' and `tsx-ts-mode' entries from
+;; `auto-mode-alist'.
 (with-eval-after-load 'typescript-ts-mode
   (setq auto-mode-alist (seq-filter
                          (lambda (x)

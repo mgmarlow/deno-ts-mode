@@ -9,7 +9,7 @@ A major mode for Deno, based on `typescript-ts-mode`.
 - Syntax highlighting (based on `typescript-ts-mode`)
 - Task automation
 - Eglot configuration
-- TypeScript file extension helpers for `auto-mode`
+- `auto-mode-alist` resolution for ".ts" and ".tsx" files
 
 ## Installation
 
@@ -37,18 +37,17 @@ Available on [MELPA](https://melpa.org/#/deno-ts-mode):
 
 ### Project detection
 
-When `deno-ts-setup-auto-mode-alist` is used, `deno-ts-mode` will
-detect whether the currently visited TypeScript file (`.ts` or `.tsx`)
-is a Deno project by looking at its project root for a `deno.json`
-file. If successful, that TypeScript file is considered a Deno file
-for the purposes of `deno-ts-mode`. Otherwise,
-`deno-ts-setup-auto-mode-alist` will fallback to `typescript-ts-mode`.
+`deno-ts-mode` will automatically configure `auto-mode-alist` to check
+for Deno projects when resolving the ".ts" and ".tsx" file
+extensions. Whether or not a project is considered a Deno project is
+based on the existence of a [Deno configuration
+file](https://deno.land/manual@v1.36.4/getting_started/configuration_file)
+at the project root. Both `deno.json` and `deno.jsonc` are considered
+valid configuration files.
 
-This all means that the default Deno file detection is based on the
-presence of a `deno.json` file in an [Emacs
-Project](https://www.gnu.org/software/emacs/manual/html_node/emacs/Projects.html). Generally
-speaking, projects are only detectable if they are under version
-control.
+If a ".ts" or ".tsx" file is not in a project with a Deno
+configuration file, `deno-ts-mode-maybe` will fallback to either
+`typescript-ts-mode` or `tsx-ts-mode` depending on the extension.
 
 ## Task automation
 
@@ -56,26 +55,16 @@ If your project's [deno configuration
 file](https://deno.land/manual@v1.36.2/getting_started/configuration_file)
 contains tasks you can run them directly from Emacs.
 
-```json
-{
-  "tasks": {
-    "dev": "deno run --watch main.ts"
-  }
-}
-```
-
-Run a task:
-
 ```
 M-x deno-ts-run-task
 ```
+
 
 ## Eglot setup example
 
 ```elisp
 (use-package deno-ts-mode
-  :config
-  (deno-ts-setup-auto-mode-alist))
+  :ensure t)
 
 (use-package eglot
   :ensure t
