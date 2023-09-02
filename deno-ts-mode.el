@@ -5,7 +5,7 @@
 ;; Author: Graham Marlow <info@mgmarlow.com>
 ;; Keywords: languages
 ;; URL: https://git.sr.ht/~mgmarlow/deno-ts-mode
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((emacs "29.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -154,8 +154,9 @@ determined by `deno-project-p') this function will fallback to
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 
 ;;;###autoload
-(dolist (file '("deno.json" "deno.jsonc"))
-  (add-to-list 'project-vc-extra-root-markers file))
+(with-eval-after-load 'project
+  (dolist (file '("deno.json" "deno.jsonc"))
+    (add-to-list 'project-vc-extra-root-markers file)))
 
 (provide 'deno-ts-mode)
 ;;; deno-ts-mode.el ends here
