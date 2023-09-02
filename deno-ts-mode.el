@@ -43,8 +43,7 @@
 ;; Example configuration:
 ;; 
 ;; (use-package deno-ts-mode
-;;   :config
-;;   (deno-ts-setup-auto-mode-alist))
+;;   :ensure t)
 ;;
 ;; (use-package eglot
 ;;   :ensure t
@@ -56,7 +55,6 @@
 
 (require 'eglot)
 (require 'project)
-(require 'typescript-ts-mode) ; Make sure to load auto-mode-alist here first
 (require 'json)
 (require 'cl-lib)
 
@@ -70,7 +68,7 @@
   :type 'string
   :group 'deno)
 
-(defun deno-ts--project-config-path ()
+(defun deno-ts-project-config-path ()
   "Return the filepath of the current project's deno config.
 
 Return nil if `project-current' is nil or if a deno config file
@@ -87,7 +85,7 @@ cannot be found."
 
 Return nil if `project-current' is not a Deno project or the
 current project cannot be read."
-  (and (deno-ts--project-config-path) t))
+  (and (deno-ts-project-config-path) t))
 
 ;; https://deno.land/manual@v1.36.1/getting_started/setup_your_environment#eglot
 (defun deno-ts-setup-eglot ()
@@ -111,7 +109,7 @@ current project cannot be read."
   "Return an instance of `deno-ts-config' built from the current project.
 
 Return nil if no project is found."
-  (when-let ((p-config-path (deno-ts--project-config-path)))
+  (when-let ((p-config-path (deno-ts-project-config-path)))
     (deno-ts--build-config
      (with-temp-buffer
        (insert-file-contents p-config-path)
@@ -126,29 +124,51 @@ Return nil if no project is found."
                        (completing-read "Run task: " tasks nil t)))
     (error "Cannot find Deno configuration file")))
 
+;;;###autoload
 (define-derived-mode deno-ts-mode
   typescript-ts-mode "Deno"
   "Major mode for Deno."
   :group 'deno-ts-mode)
 
-(defun deno-ts--ts-auto-mode ()
-  "Return `deno-ts-mode' if project is a Deno project, else `typescript-ts-mode'."
-  (cond ((deno-ts-project-p) (deno-ts-mode))
-        (t (typescript-ts-mode))))
+;;;###autoload
+(defun deno-ts-mode-maybe ()
+  "Turn on `deno-ts-mode' if a Deno config file is found.
 
-(defun deno-ts--tsx-auto-mode ()
-  "Return `deno-ts-mode' if project is a Deno project, else `tsx-ts-mode'."
-  (cond ((deno-ts-project-p) (deno-ts-mode))
-        (t (tsx-ts-mode))))
+Otherwise, fallback to either `typescript-ts-mode' or
+`tsx-ts-mode' depending on the visited file extension."
+  (if-let* ((filename (buffer-file-name))
+            (ext (file-name-extension filename)))
+      (cond ((and (equal "ts" ext) (deno-ts-project-p))
+             (deno-ts-mode))
+            ((equal "ts" ext)
+             (typescript-ts-mode))
+            ((and (equal "tsx" ext) (deno-ts-project-p))
+             (deno-ts-mode))
+            ((equal "tsx" ext)
+             (tsx-ts-mode)))))
 
-(defun deno-ts-setup-auto-mode-alist ()
-  "Add Deno to `auto-mode-alist' for .ts and .tsx files.
+;; `deno-ts-mode' is competing with `typescript-ts-mode' and
+;; `tsx-ts-mode' for precedence of the ".ts" and ".tsx" file
+;; extensions.  `deno-ts-mode' is derived from `typescript-ts-mode'
+;; and will load it implicitly.  This is a problem for
+;; `auto-mode-alist' because `typescript-ts-mode' adds itself to
+;; `auto-mode-alist', meaning that it will come first in the
+;; association list since it's loaded after the `deno-ts-mode'
+;; autoloads. To work around this, remove the `typescript-ts-mode' and
+;; `tsx-ts-mode' entries from `auto-mode-alist'. This library assumes
+;; that users want to check for Deno files in all cases.
+(with-eval-after-load 'typescript-ts-mode
+  (setq auto-mode-alist (seq-filter
+                         (lambda (x)
+                           (not (or (equal (cdr x) 'typescript-ts-mode)
+                                    (equal (cdr x) 'tsx-ts-mode))))
+                         auto-mode-alist)))
 
-If the visited .ts file does not detect a Deno project (as
-determined by `deno-project-p') this function will fallback to
-`typescript-ts-mode'."
-  (add-to-list 'auto-mode-alist '("\\.ts\\'" . deno-ts--ts-auto-mode))
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . deno-ts--tsx-auto-mode)))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . deno-ts-mode-maybe))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . deno-ts-mode-maybe))
 
 ;; Required for Deno's color output.
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
