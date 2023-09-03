@@ -1,0 +1,21 @@
+* deno-ts-mode changelog
+
+** 0.2.0
+
+Breaking:
+
+- Drop =deno-ts-setup-auto-mode-alist= in favor of automatically
+  configuring =auto-mode-alist= via autoloading.
+
+Other:
+
+- Autoload =deno-ts-mode=.
+- =deno-ts-project-config-path= is now a public function.
+
+** 0.1.1
+
+Bugs:
+
+- Fix =void-function project-vc-extra-root-markers= when processing
+  autoloads. This variable is now written to only after the =project=
+  feature is loaded.
