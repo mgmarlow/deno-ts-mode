@@ -5,7 +5,7 @@
 ;; Author: Graham Marlow <info@mgmarlow.com>
 ;; Keywords: languages
 ;; URL: https://git.sr.ht/~mgmarlow/deno-ts-mode
-;; Version: 0.2.0
+;; Version: 0.3.0
 ;; Package-Requires: ((emacs "29.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -43,9 +43,8 @@
 ;;
 ;; (use-package eglot
 ;;   :ensure t
-;;   :hook ((deno-ts-mode . eglot-ensure))
-;;   :config
-;;   (deno-ts-setup-eglot))
+;;   :hook ((deno-ts-mode . eglot-ensure)
+;;          (deno-tsx-ts-mode . eglot-ensure)))
 
 ;;; Code:
 
@@ -82,12 +81,6 @@ cannot be found."
 Return nil if `project-current' is not a Deno project or the
 current project cannot be read."
   (and (deno-ts-project-config-path) t))
-
-;; https://deno.land/manual@v1.36.1/getting_started/setup_your_environment#eglot
-(defun deno-ts-setup-eglot ()
-  "Add `deno-ts-mode' to `eglot-server-programs'."
-  (add-to-list 'eglot-server-programs
-               '(deno-ts-mode . ("deno" "lsp" :initializationOptions (:enable t :lint t)))))
 
 (cl-defstruct deno-ts-config
   "Deno configuration file struct."
@@ -127,6 +120,12 @@ Return nil if no project is found."
   :group 'deno-ts-mode)
 
 ;;;###autoload
+(define-derived-mode deno-tsx-ts-mode
+  tsx-ts-mode "Deno[TSX]"
+  "Major mode for TSX and JSX with Deno."
+  :group 'deno-ts-mode)
+
+;;;###autoload
 (defun deno-ts-mode-maybe ()
   "Maybe activate `deno-ts-mode'.
 
@@ -140,7 +139,7 @@ activated.  Otherwise, fallback to either `typescript-ts-mode' or
             ((equal "ts" ext)
              (typescript-ts-mode))
             ((and (equal "tsx" ext) (deno-ts-project-p))
-             (deno-ts-mode))
+             (deno-tsx-ts-mode))
             ((equal "tsx" ext)
              (tsx-ts-mode)))))
 
@@ -157,6 +156,12 @@ activated.  Otherwise, fallback to either `typescript-ts-mode' or
                            (not (or (equal (cdr x) 'typescript-ts-mode)
                                     (equal (cdr x) 'tsx-ts-mode))))
                          auto-mode-alist)))
+
+;; Register eglot server program for TS and TSX.
+(dolist (mode '(deno-ts-mode deno-tsx-ts-mode))
+    (add-to-list 'eglot-server-programs
+                 (cons mode '("deno" "lsp" :initializationOptions
+                              (:enable t :lint t :unstable t)))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . deno-ts-mode-maybe))

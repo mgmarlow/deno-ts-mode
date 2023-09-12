@@ -1,5 +1,16 @@
 * deno-ts-mode changelog
 
+** 0.3.0
+
+Breaking:
+
+- Remove =deno-ts-setup-eglot= in favor of automatically adding Eglot
+  server programs for both =deno-ts-mode= and =deno-tsx-ts-mode=.
+
+Other:
+
+- New major mode: =deno-tsx-ts-mode= for TSX and JSX support.
+
 ** 0.2.0
 
 Breaking:

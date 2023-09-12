@@ -68,9 +68,8 @@ M-x deno-ts-run-task
 
 (use-package eglot
   :ensure t
-  :hook ((deno-ts-mode . eglot-ensure))
-  :config
-  (deno-ts-setup-eglot))
+  :hook ((deno-ts-mode . eglot-ensure)
+         (deno-tsx-ts-mode . eglot-ensure)))
 ```
 
 ## Contributing
